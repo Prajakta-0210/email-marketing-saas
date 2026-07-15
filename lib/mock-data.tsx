@@ -104,3 +104,59 @@ export const activityFeed: ActivityItem[] = [
   { id: "act_004", type: "campaign_opened", message: "Open rate for \"Customer Feedback Survey\" crossed 50%", timestamp: "2026-07-14T11:10:00Z" },
   { id: "act_005", type: "contact_added", message: "5 contacts manually added to \"Newsletter Subscribers\"", timestamp: "2026-07-13T13:35:00Z", actor: "Priya Patel" },
 ];
+
+// ---- Campaign analytics (derived mock data) ----
+
+export interface OpensDataPoint {
+  hour: string;
+  opens: number;
+}
+
+export interface CampaignAnalytics {
+  sent: number;
+  delivered: number;
+  opened: number;
+  bounced: number;
+  deliveredRate: number;
+  openRate: number;
+  bounceRate: number;
+  clickRate: number;
+  opensTimeline: OpensDataPoint[];
+}
+
+export function getCampaignAnalytics(campaignId: string): CampaignAnalytics {
+  const campaign = campaigns.find((c) => c.id === campaignId) ?? campaigns[0];
+  const sent = campaign.sent > 0 ? campaign.sent : campaign.recipients;
+  const bounced = Math.round(sent * 0.021);
+  const delivered = sent - bounced;
+  const opened = Math.round(delivered * (campaign.openRate / 100 || 0.28));
+
+  // Deterministic pseudo-random hourly distribution so charts look organic
+  // but stay stable across renders.
+  const shape = [4, 9, 18, 30, 45, 62, 78, 92, 100, 88, 70, 54, 40, 28, 20, 14, 10, 7];
+  const peak = Math.max(...shape);
+  const opensTimeline: OpensDataPoint[] = shape.map((v, i) => ({
+    hour: `${(9 + i) % 24}:00`,
+    opens: Math.round((v / peak) * opened * 0.09),
+  }));
+
+  return {
+    sent,
+    delivered,
+    opened,
+    bounced,
+    deliveredRate: Math.round((delivered / sent) * 1000) / 10,
+    openRate: Math.round((opened / delivered) * 1000) / 10,
+    bounceRate: Math.round((bounced / sent) * 1000) / 10,
+    clickRate: campaign.clickRate ?? Math.round((campaign.openRate ?? 0) * 0.32 * 10) / 10,
+    opensTimeline,
+  };
+}
+
+export const campaignRecentActivity = [
+  { id: "cra_001", message: "142 recipients opened the email in the last hour", timestamp: "2026-07-15T13:40:00Z" },
+  { id: "cra_002", message: "8 recipients clicked the main CTA button", timestamp: "2026-07-15T13:12:00Z" },
+  { id: "cra_003", message: "3 emails bounced (invalid address)", timestamp: "2026-07-15T12:55:00Z" },
+  { id: "cra_004", message: "1 recipient unsubscribed after opening", timestamp: "2026-07-15T12:20:00Z" },
+  { id: "cra_005", message: "Delivery to all recipients completed", timestamp: "2026-07-15T11:05:00Z" },
+];
