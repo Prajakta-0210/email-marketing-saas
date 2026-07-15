@@ -93,6 +93,8 @@ export const audiences: Audience[] = [
   { id: "aud_001", name: "Active Customers", description: "Purchased in the last 90 days", filters: ["Purchased: last 90 days", "Status: Subscribed"], contactCount: 4820, updatedAt: "2026-07-08" },
   { id: "aud_002", name: "Newsletter Subscribers", description: "Opted in to weekly newsletter", filters: ["Tag: newsletter", "Status: Subscribed"], contactCount: 9210, updatedAt: "2026-07-11" },
   { id: "aud_003", name: "High-Value Leads", description: "Engagement score above 80", filters: ["Score: > 80", "Country: US"], contactCount: 1340, updatedAt: "2026-07-01" },
+  { id: "aud_004", name: "Cart Abandoners", description: "Added to cart but didn't purchase", filters: ["Event: cart_add", "Event: purchase = false"], contactCount: 2670, updatedAt: "2026-07-09" },
+  { id: "aud_005", name: "Inactive 60 Days", description: "No opens or clicks in the last 60 days", filters: ["Last open: > 60 days", "Status: Subscribed"], contactCount: 3105, updatedAt: "2026-06-28" },
 ];
 
 export const activityFeed: ActivityItem[] = [
