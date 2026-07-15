@@ -160,3 +160,44 @@ export const campaignRecentActivity = [
   { id: "cra_004", message: "1 recipient unsubscribed after opening", timestamp: "2026-07-15T12:20:00Z" },
   { id: "cra_005", message: "Delivery to all recipients completed", timestamp: "2026-07-15T11:05:00Z" },
 ];
+
+// ---- Workspace-wide analytics (for the main Analytics page) ----
+
+export interface DailyPerformancePoint {
+  day: string;
+  opens: number;
+  clicks: number;
+}
+
+export function getOverallAnalytics() {
+  const sentCampaigns = campaigns.filter((c) => c.sent > 0);
+  const totalSent = sentCampaigns.reduce((sum, c) => sum + c.sent, 0);
+  const avgOpenRate =
+    sentCampaigns.reduce((sum, c) => sum + c.openRate, 0) / (sentCampaigns.length || 1);
+  const avgClickRate =
+    sentCampaigns.reduce((sum, c) => sum + (c.clickRate ?? 0), 0) /
+    (sentCampaigns.length || 1);
+  const totalOpened = Math.round(totalSent * (avgOpenRate / 100));
+
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const opensShape = [420, 380, 510, 690, 610, 340, 260];
+  const clicksShape = [120, 100, 150, 210, 190, 90, 70];
+  const performanceOverTime: DailyPerformancePoint[] = days.map((day, i) => ({
+    day,
+    opens: opensShape[i],
+    clicks: clicksShape[i],
+  }));
+
+  const topCampaigns = [...sentCampaigns]
+    .sort((a, b) => b.openRate - a.openRate)
+    .slice(0, 5);
+
+  return {
+    totalSent,
+    totalOpened,
+    avgOpenRate: Math.round(avgOpenRate * 10) / 10,
+    avgClickRate: Math.round(avgClickRate * 10) / 10,
+    performanceOverTime,
+    topCampaigns,
+  };
+}
