@@ -6,6 +6,7 @@ import { FolderPlus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,11 @@ interface FilterRow {
   value: string;
 }
 
-export function CreateAudienceModal() {
+export function CreateAudienceModal({
+  onCreated,
+}: {
+  onCreated: (audience: any) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -31,12 +36,15 @@ export function CreateAudienceModal() {
   ]);
 
   function addFilter() {
-    setFilters((f) => [...f, { id: crypto.randomUUID(), field: "", value: "" }]);
+    setFilters((f) => [
+      ...f,
+      { id: crypto.randomUUID(), field: "", value: "" },
+    ]);
   }
 
   function updateFilter(id: string, key: "field" | "value", val: string) {
     setFilters((f) =>
-      f.map((row) => (row.id === id ? { ...row, [key]: val } : row))
+      f.map((row) => (row.id === id ? { ...row, [key]: val } : row)),
     );
   }
 
@@ -50,11 +58,23 @@ export function CreateAudienceModal() {
     setFilters([{ id: crypto.randomUUID(), field: "", value: "" }]);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Mock save — no backend wired up.
-    setOpen(false);
-    resetForm();
+    try {
+      const filterValues = filters
+        .filter((f) => f.field && f.value)
+        .map((f) => `${f.field}: ${f.value}`);
+      const newAudience = await api.post("/api/audiences", {
+        name,
+        description,
+        filters: filterValues,
+      });
+      onCreated(newAudience);
+      setOpen(false);
+      resetForm();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create audience");
+    }
   }
 
   return (
@@ -75,7 +95,8 @@ export function CreateAudienceModal() {
         <DialogHeader>
           <DialogTitle>Create audience</DialogTitle>
           <DialogDescription>
-            Group contacts by filters so you can target them together in campaigns.
+            Group contacts by filters so you can target them together in
+            campaigns.
           </DialogDescription>
         </DialogHeader>
 
@@ -122,13 +143,17 @@ export function CreateAudienceModal() {
                   <Input
                     placeholder="Field (e.g. Status)"
                     value={row.field}
-                    onChange={(e) => updateFilter(row.id, "field", e.target.value)}
+                    onChange={(e) =>
+                      updateFilter(row.id, "field", e.target.value)
+                    }
                     className="w-2/5"
                   />
                   <Input
                     placeholder="Value (e.g. Subscribed)"
                     value={row.value}
-                    onChange={(e) => updateFilter(row.id, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateFilter(row.id, "value", e.target.value)
+                    }
                   />
                   <button
                     type="button"
@@ -145,7 +170,11 @@ export function CreateAudienceModal() {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit">Create audience</Button>

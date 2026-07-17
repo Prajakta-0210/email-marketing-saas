@@ -1,5 +1,14 @@
+"use client";
 import Link from "next/link";
-import { PlusCircle, Eye, Pencil, Copy, Trash2, MoreHorizontal, Send } from "lucide-react";
+import {
+  PlusCircle,
+  Eye,
+  Pencil,
+  Copy,
+  Trash2,
+  MoreHorizontal,
+  Send,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,8 +34,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CampaignStatusBadge } from "@/components/shared/campaign-status-badge";
-import { campaigns } from "@/lib/mock-data";
-
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 function formatNumber(n: number) {
   return new Intl.NumberFormat("en-US").format(n);
 }
@@ -47,6 +56,11 @@ function formatTime(iso: string) {
 }
 
 export default function CampaignsPage() {
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get("/api/campaigns").then(setCampaigns).catch(console.error);
+  }, []);
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -79,7 +93,9 @@ export default function CampaignsPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100">
                 <Send className="h-5 w-5 text-gray-400" />
               </div>
-              <p className="text-sm font-medium text-gray-900">No campaigns yet</p>
+              <p className="text-sm font-medium text-gray-900">
+                No campaigns yet
+              </p>
               <p className="text-xs text-gray-500">
                 Create your first campaign to get started.
               </p>
@@ -113,12 +129,15 @@ export default function CampaignsPage() {
                       {formatNumber(c.recipients)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {c.status === "Draft" ? (
+                      {!c.scheduledDate ? (
                         <span className="text-gray-400">Not scheduled</span>
                       ) : (
                         <>
                           {formatDate(c.scheduledDate)}
-                          <span className="text-gray-400"> · {formatTime(c.scheduledDate)}</span>
+                          <span className="text-gray-400">
+                            {" "}
+                            · {formatTime(c.scheduledDate)}
+                          </span>
                         </>
                       )}
                     </TableCell>

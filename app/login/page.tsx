@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight } from "lucide-react";
+import { api, setToken } from "@/lib/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
@@ -34,11 +35,15 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    // Mock authentication — no backend wired up.
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const data = await api.post("/api/auth/login", { email, password });
+      setToken(data.token);
       router.push("/dashboard");
-    }, 700);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -118,7 +123,9 @@ export default function LoginPage() {
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     tabIndex={-1}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -150,7 +157,10 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="#" className="font-medium text-primary hover:text-primary-700">
+          <Link
+            href="#"
+            className="font-medium text-primary hover:text-primary-700"
+          >
             Sign up
           </Link>
         </p>

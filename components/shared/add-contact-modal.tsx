@@ -6,6 +6,7 @@ import { Plus, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,11 @@ interface CustomField {
   value: string;
 }
 
-export function AddContactModal() {
+export function AddContactModal({
+  onCreated,
+}: {
+  onCreated: (contact: any) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +43,7 @@ export function AddContactModal() {
 
   function updateField(id: string, key: "key" | "value", val: string) {
     setCustomFields((f) =>
-      f.map((field) => (field.id === id ? { ...field, [key]: val } : field))
+      f.map((field) => (field.id === id ? { ...field, [key]: val } : field)),
     );
   }
 
@@ -53,11 +58,20 @@ export function AddContactModal() {
     setCustomFields([]);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Mock save — no backend wired up.
-    setOpen(false);
-    resetForm();
+    try {
+      const newContact = await api.post("/api/contacts", {
+        name,
+        email,
+        phone,
+      });
+      onCreated(newContact);
+      setOpen(false);
+      resetForm();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to add contact");
+    }
   }
 
   return (
@@ -137,7 +151,8 @@ export function AddContactModal() {
 
             {customFields.length === 0 ? (
               <p className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-center text-xs text-gray-400">
-                No custom fields yet — click &quot;Add Field&quot; to attach one.
+                No custom fields yet — click &quot;Add Field&quot; to attach
+                one.
               </p>
             ) : (
               <div className="space-y-2">
